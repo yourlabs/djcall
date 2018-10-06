@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name='django-call',
-    version=os.getenv('CI_COMMIT_REF_NAME', 'dev'),
+    version=os.getenv('CI_COMMIT_REF_NAME', '999'),
     description='Leverage uWSGI spooler and cron in Django',
     author='James Pic',
     author_email='jpic@yourlabs.org',
