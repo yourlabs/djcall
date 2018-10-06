@@ -173,6 +173,9 @@ class Caller(Metadata):
     priority = models.IntegerField(null=True, blank=True)
     signal_number = models.IntegerField(null=True, blank=True)
 
+    class Meta:
+        verbose_name = _('Caller')
+
     def __str__(self):
         if hasattr(self.kwargs, 'items'):
             args = ', '.join([f'{k}={c(v)}' for k, v in self.kwargs.items()])
@@ -278,6 +281,9 @@ class Call(Metadata):
         on_delete=models.CASCADE,
         editable=False,
     )
+
+    class Meta:
+        verbose_name = _('Call')
 
     def __init__(self, *args, **kwargs):
         if 'caller' not in kwargs and 'callback' in kwargs:

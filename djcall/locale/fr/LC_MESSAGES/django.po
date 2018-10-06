@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: django\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-10-06 04:50+0200\n"
+"PO-Revision-Date: 2017-01-21 14:47+0000\n"
+"Last-Translator: James Pic <jpic@yourlabs.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: models.py:108 models.py:260
+msgid "Created"
+msgstr "Créée"
+
+#: models.py:109 models.py:261
+msgid "Spooled"
+msgstr "Programmée"
+
+#: models.py:110 models.py:262
+msgid "Started"
+msgstr "Demarrée"
+
+#: models.py:111 models.py:263
+msgid "Success"
+msgstr "Succès"
+
+#: models.py:112
+msgid "Retrying"
+msgstr "Re-essaye"
+
+#: models.py:113 models.py:264
+msgid "Failure"
+msgstr "Échec"
+
+#: models.py:114 models.py:265
+msgid "Unspoolable"
+msgstr "Inprogramable"
+
+#: models.py:177
+msgid "Caller"
+msgstr "Fonction"
+
+#: models.py:286
+msgid "Call"
+msgstr "Appel"
