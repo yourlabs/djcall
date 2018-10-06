@@ -1,0 +1,25 @@
+py-qa:
+  stage: test
+  image: yourlabs/python
+  script: tox -e qa
+  cache:
+    paths: [.tox]
+
+py-test:
+  stage: test
+  image: yourlabs/python
+  script: tox -e py36-dj21
+  cache:
+    paths: [.tox]
+
+pypi:
+  stage: deploy
+  image: yourlabs/python
+  only:
+  - /^\d+\./
+  script:
+  - echo -e "[pypi]" >> ~/.pypirc
+  - echo -e "username = $PYPI_USER" >> ~/.pypirc
+  - echo -e "password = $PYPI_PASS" >> ~/.pypirc
+  - python3 setup.py sdist
+  - twine upload dist/*
