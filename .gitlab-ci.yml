@@ -18,8 +18,4 @@ pypi:
   only:
   - /^\d+\./
   script:
-  - echo -e "[pypi]" >> ~/.pypirc
-  - echo -e "username = $PYPI_USER" >> ~/.pypirc
-  - echo -e "password = $PYPI_PASS" >> ~/.pypirc
-  - python3 setup.py sdist
-  - twine upload dist/*
+  - release
