@@ -4,7 +4,6 @@ import traceback
 import sys
 
 from django.db import close_old_connections
-from django.db import connection
 from django.db import models
 from django.db import transaction
 from django.db.models import signals
@@ -49,7 +48,7 @@ def spooler(env):
     if call:
         try:
             call.call()
-        except:
+        except Exception:
             max_attempts = call.caller.max_attempts
             close_old_connections()  # cleanup
 
@@ -222,15 +221,20 @@ class Caller(Metadata):
                 arg[b'spooler'] = get_spooler_path(self.spooler)
             if self.priority:
                 arg[b'priority'] = self.priority
+
             def spool():
                 logger.debug(f'uwsgi.spool({arg})')
                 try:
                     uwsgi.spool(arg)
                 except Exception as e:
                     tt, value, tb = sys.exc_info()
-                    call.exception = '\n'.join(traceback.format_exception(tt, value, tb))
+                    call.exception = '\n'.join(
+                        traceback.format_exception(tt, value, tb))
                     call.save_status('unspoolable')
-                    logger.exception(f'{self} -> Call(id={call.pk}).spool(): uwsgi.spool exception !')
+                    logger.exception(
+                        f'{self} -> Call(id={call.pk}).spool():'
+                        f' uwsgi.spool exception !'
+                    )
                     # uwsgi does not seem to reprint logger.exception
             transaction.on_commit(spool)
         else:
@@ -243,6 +247,8 @@ class Caller(Metadata):
 def default_kwargs(sender, instance, **kwargs):
     if instance.kwargs is None:
         instance.kwargs = dict()
+
+
 signals.post_save.connect(default_kwargs, sender=Caller)
 
 
@@ -291,7 +297,7 @@ class Call(Metadata):
         self.caller.save_status(status, commit=commit)
 
     def call(self):
-        logger.debug(f'{self.caller} -> Call(id={self.pk}).call()')
+        logger.debug(f'{self.caller} -> Call(id={self.pk}).call(): begin')
         self.save_status('started')
 
         sid = transaction.savepoint()
@@ -301,13 +307,15 @@ class Call(Metadata):
         except Exception as e:
             tt, value, tb = sys.exc_info()
             transaction.savepoint_rollback(sid)
-            self.exception = '\n'.join(traceback.format_exception(tt, value, tb))
+            self.exception = '\n'.join(
+                traceback.format_exception(tt, value, tb))
             self.save_status('failure')
-            logger.exception(f'{self.caller} -> Call(id={self.pk}).call(): exception')
+            logger.exception(
+                f'{self.caller} -> Call(id={self.pk}).call(): exception')
             raise
 
         self.save_status('success')
-        logger.debug(f'{self.caller} -> Call(id={self.pk}).call(): success')
+        logger.info(f'{self.caller} -> Call(id={self.pk}).call(): success')
 
 
 class CronManager(models.Manager):
@@ -338,7 +346,8 @@ class CronManager(models.Manager):
                 executor,
             )
 
-            logger.debug(f'uwsgi.register_signal({signal_number}, {caller.callback})')
+            logger.debug(
+                f'uwsgi.register_signal({signal_number}, {caller.callback})')
 
             signal_number += 1
 
@@ -387,5 +396,7 @@ class Cron(models.Model):
 
     def add_cron(self):
         for args in self.get_matrix():
-            logger.debug(f'{self.caller} add cron : {args} signal {self.caller.signal_number}')
+            logger.debug(
+                f'{self.caller} add cron : {args} '
+                f'signal {self.caller.signal_number}')
             uwsgi.add_cron(self.caller.signal_number, *args)

@@ -1,14 +1,16 @@
 from django import apps
-from django.db import transaction
+
+try:
+    import uwsgi
+except ImportError:
+    uwsgi = None
 
 
 class DjcallConfig(apps.AppConfig):
     name = 'djcall'
 
     def ready(self):
-        try:
-            import uwsgi
-        except ImportError:
+        if not uwsgi:
             return
 
         from .models import Caller, Cron

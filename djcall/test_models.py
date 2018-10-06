@@ -1,5 +1,4 @@
 import pytest
-from unittest import mock
 
 from djcall.models import Call, Caller, Cron, spooler
 
@@ -94,4 +93,6 @@ def test_python_callback():
 
 def test_str():
     assert str(Caller(callback='lol')) == 'lol()'
-    assert str(Caller(callback='lol', kwargs=dict(a=1, b=2))) == 'lol(a=1, b=2)'
+    assert str(
+        Caller(callback='lol', kwargs=dict(a=1, b=2))
+    ) == 'lol(a=1, b=2)'

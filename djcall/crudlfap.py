@@ -1,6 +1,5 @@
 from crudlfap import crudlfap
 from django_filters import filters
-import django_tables2 as tables
 
 from .models import Call, Caller, Cron
 
