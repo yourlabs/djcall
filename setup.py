@@ -8,11 +8,11 @@ def read(fname):
 
 setup(
     name='django-call',
-    version='0.1.4',
+    version=os.getenv('CI_COMMIT_REF_NAME', 'dev'),
     description='Leverage uWSGI spooler and cron in Django',
     author='James Pic',
     author_email='jpic@yourlabs.org',
-    url='https://github.com/yourlabs/django-call',
+    url='https://yourlabs.io/oss/djcall',
     packages=find_packages('.'),
     include_package_data=True,
     long_description=read('README.rst'),
