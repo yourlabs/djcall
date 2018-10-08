@@ -11,7 +11,7 @@ VERSION = '@VERSION'
 
 
 setup(
-    name='django-call',
+    name='djcall',
     version=VERSION,
     description='Leverage uWSGI spooler and cron in Django',
     author='James Pic',
