@@ -6,9 +6,13 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
+VERSION = '@VERSION'
+
+
 setup(
     name='django-call',
-    version=os.getenv('CI_COMMIT_REF_NAME', '999'),
+    version=VERSION,
     description='Leverage uWSGI spooler and cron in Django',
     author='James Pic',
     author_email='jpic@yourlabs.org',

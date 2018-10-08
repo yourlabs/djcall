@@ -18,4 +18,4 @@ pypi:
   only:
   - /^\d+\./
   script:
-  - release
+  - VERSION=$CI_COMMIT_REF_NAME release
