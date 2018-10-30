@@ -31,7 +31,7 @@ setup(
         ],
         example=[
             'django>=2.0',
-            'crudlfap',
+            'crudlfap>=0.7.1',
         ],
     ),
     entry_points={

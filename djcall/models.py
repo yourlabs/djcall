@@ -229,7 +229,7 @@ class Caller(Metadata):
                 logger.debug(f'uwsgi.spool({arg})')
                 try:
                     uwsgi.spool(arg)
-                except Exception as e:
+                except Exception:
                     tt, value, tb = sys.exc_info()
                     call.exception = '\n'.join(
                         traceback.format_exception(tt, value, tb))
@@ -310,7 +310,7 @@ class Call(Metadata):
         try:
             self.result = self.caller.python_callback_call()
             transaction.savepoint_commit(sid)
-        except Exception as e:
+        except Exception:
             tt, value, tb = sys.exc_info()
             transaction.savepoint_rollback(sid)
             self.exception = '\n'.join(

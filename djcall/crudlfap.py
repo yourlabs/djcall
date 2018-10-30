@@ -1,4 +1,4 @@
-from crudlfap import crudlfap
+from crudlfap import shortcuts as crudlfap
 from django_filters import filters
 
 from .models import Call, Caller, Cron
@@ -52,7 +52,7 @@ crudlfap.Router(
 ).register()
 
 '''
-from crudlfap import crudlfap
+from crudlfap import shortcuts as crudlfap
 
 from django_filters import filters
 import django_tables2 as tables
