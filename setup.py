@@ -20,7 +20,7 @@ setup(
             'django-ipware',
         ],
         example=[
-            'django>=2.0',
+            'django>=2.0,<3.0',
             'crudlfap>=0.7.1',
         ],
     ),
