@@ -2,15 +2,13 @@ image: yourlabs/python
 
 py-qa:
   stage: test
-  script: tox -e qa
+  script: flake8 --show-source --max-complexity=8 --exclude migrations djcall --builtins=ModuleNotFoundError
   cache:
     paths: [.tox]
 
 py-test:
   stage: test
-  script: tox -e py36-dj21
-  cache:
-    paths: [.tox]
+  script: pip install . && py.test -vv --strict -r fEsxXw djcall
 
 pypi:
   stage: deploy
