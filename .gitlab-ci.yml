@@ -8,7 +8,7 @@ py-qa:
 
 py-test:
   stage: test
-  script: pip install .[django,example] && DJANGO_SETTINGS_MODULE=djcall_example.settings DEBUG=1 py.test -vv --strict -r fEsxXw djcall
+  script: pip install -e .[django,example] && DJANGO_SETTINGS_MODULE=djcall_example.settings DEBUG=1 py.test -vv --strict -r fEsxXw djcall
 
 pypi:
   stage: deploy
