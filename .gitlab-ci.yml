@@ -1,21 +1,17 @@
+image: yourlabs/python
+
 py-qa:
   stage: test
-  image: yourlabs/python
   script: tox -e qa
   cache:
     paths: [.tox]
 
 py-test:
   stage: test
-  image: yourlabs/python
   script: tox -e py36-dj21
   cache:
     paths: [.tox]
 
 pypi:
   stage: deploy
-  image: yourlabs/python
-  only:
-  - /^\d+\./
-  script:
-  - VERSION=$CI_COMMIT_REF_NAME release
+  script: pypi-release

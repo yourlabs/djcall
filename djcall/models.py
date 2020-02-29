@@ -390,7 +390,9 @@ class Cron(models.Model):
         ]
 
         for i, arg in enumerate(args):
-            if arg == '*':
+            if arg.startswith('-'):
+                args[i] = [int(arg)]
+            elif arg == '*':
                 args[i] = [-1]
             elif '-' in arg:
                 n, m = arg.split('-')
