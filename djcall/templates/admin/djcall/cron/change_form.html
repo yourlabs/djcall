@@ -1,0 +1,8 @@
+{% extends 'admin/change_form.html' %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'admin:djcall_call_changelist' %}?caller={{ original.caller_id }}" class="historylink">Calls</a>
+</li>
+{% endblock %}

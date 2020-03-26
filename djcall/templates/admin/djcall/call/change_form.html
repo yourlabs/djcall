@@ -1,0 +1,36 @@
+{% extends 'admin/change_form.html' %}
+
+{% block field_sets %}
+<fieldset class="module aligned ">
+    <div class="form-row">
+        <label class="required">Caller:</label>
+	<a href="/admin/djcall/caller/{{ original.caller_id }}/" title="Add another Caller">{{ original.caller }}</a>
+    </div>
+    {% if original.caller.kwargs %}
+    <div class="form-row">
+        <label class="required">Caller Kwargs:</label>
+	<code>{{ original.caller.kwargs }}</code>
+    </div>
+    {% endif %}
+    <div class="form-row">
+        <label class="required">Status:</label>
+	{{ original.status }}
+	-
+	{{ original.get_status_display }}
+    </div>
+    {% if original.exception %}
+    <div class="form-row">
+        <label class="required">Exception:</label>
+	<pre>
+	    {{ original.exception }}
+	</pre>
+    </div>
+    {% endif %}
+    {% if original.parent %}
+    <div class="form-row">
+        <label class="required">Parent:</label>
+	<a href="/admin/djcall/call/{{ original.parent_id }}/" title="Add another Call">{{ original.parent }}</a>
+    </div>
+    {% endif %}
+</fieldset>
+{% endblock %}

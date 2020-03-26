@@ -1,0 +1,55 @@
+{% extends 'admin/change_form.html' %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'admin:djcall_call_changelist' %}?caller={{ original.id }}" class="historylink">Calls</a>
+</li>
+{% endblock %}
+
+{% block field_sets %}
+<fieldset class="module aligned ">
+    <div class="form-row">
+        <label class="required">Callback:</label>
+        <a href="/admin/djcall/caller/?callback={{ original.callback }}">{{ original.callback }}</a>
+    </div>
+    {% if original.kwargs %}
+    <div class="form-row">
+        <label class="required">Kwargs:</label>
+	<code>{{ original.kwargs }}</code>
+    </div>
+    {% endif %}
+    <div class="form-row">
+        <label class="required">Status:</label>
+        {{ original.status }}
+        -
+        {{ original.get_status_display }}
+    </div>
+    <div class="form-row">
+        <label class="required">Created:</label>
+	    {{ original.created }}
+    </div>
+    <div class="form-row">
+        <label class="required">Spooled:</label>
+	    {{ original.spooled }}
+    </div>
+    <div class="form-row">
+        <label class="required">Ended:</label>
+	    {{ original.ended }}
+    </div>
+    {% if original.exception %}
+    <div class="form-row">
+        <label class="required">Exception:</label>
+	<pre>
+	    {{ original.exception }}
+	</pre>
+    </div>
+    {% endif %}
+    {% if original.parent %}
+    <div class="form-row">
+        <label class="required">Parent:</label>
+	<a href="/admin/djcall/call/{{ original.parent_id }}/" title="Add another Call">{{ original.parent }}</a>
+    </div>
+    {% endif %}
+</fieldset>
+{% endblock %}
