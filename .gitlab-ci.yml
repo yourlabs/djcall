@@ -11,3 +11,5 @@ py-test:
 pypi:
   stage: deploy
   script: pypi-release
+  only:
+    - tags
