@@ -90,6 +90,11 @@ def test_python_callback():
     caller = Caller(callback='djcall.models.Caller.objects.all')
     assert caller.python_callback == Caller.objects.all
 
+    caller = Caller(callback='doesnotexit.foobar')
+    with pytest.raises(ModuleNotFoundError,
+                       match="No module named 'doesnotexit'"):
+        caller.python_callback
+
 
 def test_str():
     assert str(Caller(callback='lol')) == 'lol()'

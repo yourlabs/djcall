@@ -191,9 +191,9 @@ class Caller(Metadata):
             try:
                 mod = import_string('.'.join(parts[:i + 1]))
             except ImportError:
+                i -= 1
                 if not i:
                     raise
-                i -= 1
             else:
                 ret = mod
                 while 0 < i < self.callback.count('.'):
