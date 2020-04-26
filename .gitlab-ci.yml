@@ -1,15 +1,15 @@
 image: yourlabs/python
 
 py-qa:
-  stage: test
   script: flake8 --show-source --max-complexity=8 --exclude migrations djcall --builtins=ModuleNotFoundError
-  cache:
-    paths: [.tox]
 
 py-test:
-  stage: test
-  script: pip install -e .[django,example] && DJANGO_SETTINGS_MODULE=djcall_example.settings DEBUG=1 py.test -vv --strict -r fEsxXw djcall
+  script:
+    - pip install -e .[django,example]
+    - DEBUG=1 pytest -vv --strict -r fEsxXw
 
 pypi:
   stage: deploy
   script: pypi-release
+  only:
+    - tags
