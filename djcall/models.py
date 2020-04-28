@@ -394,6 +394,9 @@ class Cron(models.Model):
                 args[i] = [int(arg)]
             elif arg == '*':
                 args[i] = [-1]
+            elif arg[:2] == '*/':
+                # "*/5" => -5.
+                args[i] = [0 - int(arg[2:])]
             elif '-' in arg:
                 n, m = arg.split('-')
                 args[i] = list(range(int(n), int(m) + 1))
