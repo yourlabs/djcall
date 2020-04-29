@@ -42,10 +42,20 @@ def spooler(env):
     # this is required otherwise some postgresql exceptions blow
     close_old_connections()
 
-    call = Call.objects.filter(pk=pk).first()
+    call = Call.objects.filter(pk=pk).select_related('caller').first()
 
     success = getattr(uwsgi, 'SPOOL_OK', True)
     if call:
+        if call.caller.status == call.caller.STATUS_CANCELED:
+            logger.info(
+                f'Call(id={pk}).caller canceled !'
+                ' removing from uWSGI spooler'
+            )
+            call.status = call.STATUS_CANCELED
+            call.save()
+            close_old_connections()  # cleanup
+            return success
+
         try:
             call.call()
         except Exception:
@@ -103,6 +113,7 @@ class Metadata(models.Model):
     STATUS_RETRYING = 4
     STATUS_FAILURE = 5
     STATUS_UNSPOOLABLE = 6
+    STATUS_CANCELED = 7
 
     created = models.DateTimeField(
         default=timezone.now,
@@ -157,6 +168,7 @@ class Caller(Metadata):
         (Metadata.STATUS_RETRYING, _('Retrying')),
         (Metadata.STATUS_FAILURE, _('Failure')),
         (Metadata.STATUS_UNSPOOLABLE, _('Unspoolable')),
+        (Metadata.STATUS_CANCELED, _('Canceled')),
     )
 
     status = models.IntegerField(
@@ -265,6 +277,7 @@ class Call(Metadata):
         (Metadata.STATUS_SUCCESS, _('Success')),
         (Metadata.STATUS_FAILURE, _('Failure')),
         (Metadata.STATUS_UNSPOOLABLE, _('Unspoolable')),
+        (Metadata.STATUS_CANCELED, _('Canceled')),
     )
 
     caller = models.ForeignKey(Caller, on_delete=models.CASCADE)

@@ -104,6 +104,31 @@ def test_uwsgi_spooler_delete():
     assert spooler(kwargs)
 
 
+@pytest.mark.django_db(transaction=True)
+def test_uwsgi_spooler_cancel():
+    # test uwsgi spooler
+    caller = Caller.objects.create(
+        callback='djcall.test_models.mockito',
+        kwargs=dict(exception=Exception('lol')),
+    )
+
+    call = caller.call_set.create()
+    caller.status = caller.STATUS_CANCELED
+    caller.save()
+    kwargs = {b'call': call.pk}
+
+    # Exception should not have been raised, because caller was canceled
+    assert spooler(kwargs)
+
+    # The call should be marked as canceled
+    call.refresh_from_db()
+    assert call.status == call.STATUS_CANCELED
+
+    # Caller should still be marked as canceled
+    caller.refresh_from_db()
+    assert caller.status == caller.STATUS_CANCELED
+
+
 def test_cron_matrix():
     cron = Cron(
         minute='1-2',
