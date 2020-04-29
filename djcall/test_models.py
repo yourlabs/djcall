@@ -38,7 +38,7 @@ def test_call_execute_exception():
         caller.call()
     call = caller.call_set.last()
     assert call.status == call.STATUS_FAILURE
-    assert call.caller.status == call.STATUS_FAILURE
+    assert call.caller.status == call.STATUS_RETRYING
     assert call.result is None
     assert call.exception.startswith('Traceback')
     assert 'raise exception' in call.exception
@@ -65,10 +65,27 @@ def test_uwsgi_spooler():
         max_attempts=2,
     )
 
+    call = caller.call_set.create()
+    kwargs = {b'call': call.pk}
     with pytest.raises(Exception):
-        spooler({b'call': caller.call_set.create().pk})
+        spooler(kwargs)
 
-    assert spooler({b'call': caller.call_set.create().pk})
+    # The call should be marked as failed
+    call.refresh_from_db()
+    assert call.status == call.STATUS_FAILURE
+
+    # But max_attempt not reached, caller should be marked retrying
+    caller.refresh_from_db()
+    assert caller.status == caller.STATUS_RETRYING
+
+    # Simulate retry by uWSGI, caused by Exception raise of spooler()
+    call = caller.call_set.create()
+    kwargs = {b'call': call.pk}
+    assert spooler(kwargs)
+
+    # this is attempt 2 of 2 so it should settle with FAILURE
+    caller.refresh_from_db()
+    assert caller.status == caller.STATUS_FAILURE
 
 
 def test_cron_matrix():
