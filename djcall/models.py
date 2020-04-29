@@ -42,10 +42,20 @@ def spooler(env):
     # this is required otherwise some postgresql exceptions blow
     close_old_connections()
 
-    call = Call.objects.filter(pk=pk).first()
+    call = Call.objects.filter(pk=pk).select_related('caller').first()
 
     success = getattr(uwsgi, 'SPOOL_OK', True)
     if call:
+        if call.caller.status == call.caller.STATUS_CANCELED:
+            logger.info(
+                f'Call(id={pk}).caller canceled !'
+                ' removing from uWSGI spooler'
+            )
+            call.status = call.STATUS_CANCELED
+            call.save()
+            close_old_connections()  # cleanup
+            return success
+
         try:
             call.call()
         except Exception:
@@ -103,23 +113,8 @@ class Metadata(models.Model):
     STATUS_RETRYING = 4
     STATUS_FAILURE = 5
     STATUS_UNSPOOLABLE = 6
+    STATUS_CANCELED = 7
 
-    STATUS_CHOICES = (
-        (STATUS_CREATED, _('Created')),
-        (STATUS_SPOOLED, _('Spooled')),
-        (STATUS_STARTED, _('Started')),
-        (STATUS_SUCCESS, _('Success')),
-        (STATUS_RETRYING, _('Retrying')),
-        (STATUS_FAILURE, _('Failure')),
-        (STATUS_UNSPOOLABLE, _('Unspoolable')),
-    )
-
-    status = models.IntegerField(
-        choices=STATUS_CHOICES,
-        db_index=True,
-        default=0,
-        editable=False,
-    )
     created = models.DateTimeField(
         default=timezone.now,
         db_index=True,
@@ -139,12 +134,14 @@ class Metadata(models.Model):
     def save_status(self, status, commit=True):
         self.status = getattr(self, f'STATUS_{status}'.upper())
 
-        if self.status in (self.STATUS_FAILURE, self.STATUS_SUCCESS):
-            self.ended = timezone.now()
-        elif (self.status == self.STATUS_STARTED and
-                self.status == self.STATUS_FAILURE):
-            self.status = self.STATUS_RETRYING
+        ended = (
+            self.STATUS_FAILURE,
+            self.STATUS_SUCCESS,
+            self.STATUS_RETRYING,
+        )
 
+        if self.status in ended:
+            self.ended = timezone.now()
         elif self.status == self.STATUS_STARTED:
             self.started = timezone.now()
         elif self.status == self.STATUS_SPOOLED:
@@ -163,6 +160,23 @@ class Caller(Metadata):
     """
     SECURITY WARNING: never trust user input for kwargs or callback !
     """
+    STATUS_CHOICES = (
+        (Metadata.STATUS_CREATED, _('Created')),
+        (Metadata.STATUS_SPOOLED, _('Spooled')),
+        (Metadata.STATUS_STARTED, _('Started')),
+        (Metadata.STATUS_SUCCESS, _('Success')),
+        (Metadata.STATUS_RETRYING, _('Retrying')),
+        (Metadata.STATUS_FAILURE, _('Failure')),
+        (Metadata.STATUS_UNSPOOLABLE, _('Unspoolable')),
+        (Metadata.STATUS_CANCELED, _('Canceled')),
+    )
+
+    status = models.IntegerField(
+        choices=STATUS_CHOICES,
+        db_index=True,
+        default=0,
+        editable=False,
+    )
     kwargs = PickledObjectField(null=True)
     callback = models.CharField(
         max_length=255,
@@ -257,12 +271,13 @@ signals.post_save.connect(default_kwargs, sender=Caller)
 
 class Call(Metadata):
     STATUS_CHOICES = (
-        (Caller.STATUS_CREATED, _('Created')),
-        (Caller.STATUS_SPOOLED, _('Spooled')),
-        (Caller.STATUS_STARTED, _('Started')),
-        (Caller.STATUS_SUCCESS, _('Success')),
-        (Caller.STATUS_FAILURE, _('Failure')),
-        (Caller.STATUS_UNSPOOLABLE, _('Unspoolable')),
+        (Metadata.STATUS_CREATED, _('Created')),
+        (Metadata.STATUS_SPOOLED, _('Spooled')),
+        (Metadata.STATUS_STARTED, _('Started')),
+        (Metadata.STATUS_SUCCESS, _('Success')),
+        (Metadata.STATUS_FAILURE, _('Failure')),
+        (Metadata.STATUS_UNSPOOLABLE, _('Unspoolable')),
+        (Metadata.STATUS_CANCELED, _('Canceled')),
     )
 
     caller = models.ForeignKey(Caller, on_delete=models.CASCADE)
@@ -298,29 +313,35 @@ class Call(Metadata):
 
         super().__init__(*args, **kwargs)
 
-    def save_status(self, status, commit=True):
-        super().save_status(status, commit=commit)
-        self.caller.save_status(status, commit=commit)
-
     def call(self):
         logger.debug(f'{self.caller} -> Call(id={self.pk}).call(): begin')
         self.save_status('started')
+        self.caller.save_status('started')
 
         sid = transaction.savepoint()
         try:
             self.result = self.caller.python_callback_call()
-            transaction.savepoint_commit(sid)
         except Exception:
             tt, value, tb = sys.exc_info()
             transaction.savepoint_rollback(sid)
             self.exception = '\n'.join(
                 traceback.format_exception(tt, value, tb))
+
+            max_attempts = self.caller.max_attempts
             self.save_status('failure')
+            if max_attempts and self.caller.call_set.count() >= max_attempts:
+                self.caller.save_status('failure')
+            else:
+                self.caller.save_status('retrying')
+
             logger.exception(
                 f'{self.caller} -> Call(id={self.pk}).call(): exception')
             raise
+        else:
+            transaction.savepoint_commit(sid)
 
         self.save_status('success')
+        self.caller.save_status('success')
         logger.info(f'{self.caller} -> Call(id={self.pk}).call(): success')
 
 
