@@ -6,7 +6,7 @@ py-qa:
 py-test:
   script:
     - pip install -e .[django,example]
-    - DEBUG=1 pytest -vv --strict -r fEsxXw
+    - DEBUG=1 pytest --cov djcall --cov-report term-missing -vv --strict -r fEsxXw
 
 pypi:
   stage: deploy
