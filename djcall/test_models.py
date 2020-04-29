@@ -79,11 +79,12 @@ def test_cron_matrix():
         month='*',
         weekday='*',
     )
-
     assert cron.get_matrix() == [
         (1, 1, 1, -1, -1),
         (2, 1, 1, -1, -1),
     ]
+
+    assert Cron(minute='*/5').get_matrix() == [(-5, -1, -1, -1, -1)]
 
 
 def test_python_callback():
