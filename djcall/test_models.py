@@ -57,7 +57,7 @@ def test_spool():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_uwsgi_spooler():
+def test_uwsgi_spooler_retry_and_fail():
     # test uwsgi spooler
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
@@ -86,6 +86,22 @@ def test_uwsgi_spooler():
     # this is attempt 2 of 2 so it should settle with FAILURE
     caller.refresh_from_db()
     assert caller.status == caller.STATUS_FAILURE
+
+
+@pytest.mark.django_db(transaction=True)
+def test_uwsgi_spooler_delete():
+    # test uwsgi spooler
+    caller = Caller.objects.create(
+        callback='djcall.test_models.mockito',
+        kwargs=dict(exception=Exception('lol')),
+    )
+
+    call = caller.call_set.create()
+    kwargs = {b'call': call.pk}
+    call.delete()
+
+    # Exception should not have been raised, because caller was deleted
+    assert spooler(kwargs)
 
 
 def test_cron_matrix():
