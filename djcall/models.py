@@ -22,7 +22,7 @@ except ImportError:
 logger = logging.getLogger('djcall')
 
 
-def c(v):
+def _cv(v):
     """Clean a value for logger output"""
     return str(v).strip().replace('\n', ' ').replace('\r', '')[:16].encode(
         'ascii', 'ignore').decode('utf8')
@@ -34,8 +34,8 @@ def spooler(env):
 
     We'll try to mimic what django does for requests
     """
-    args = ', '.join([f'{k}={c(v)}' for k, v in env.items()])
-    logger.debug(f'spooler(c({args}))')
+    args = ', '.join([f'{k}={_cv(v)}' for k, v in env.items()])
+    logger.debug(f'spooler(_cv({args}))')
 
     pk = env[b'call']
 
@@ -59,7 +59,7 @@ def spooler(env):
         logger.exception(
             f'Call(id={pk}) not found in db ! removing from uWSGI spooler')
 
-    logger.debug(f'spooler(c({args})): closing on success')
+    logger.debug(f'spooler(_cv({args})): closing on success')
     close_old_connections()  # cleanup
     return success
 
@@ -178,7 +178,7 @@ class Caller(Metadata):
 
     def __str__(self):
         if hasattr(self.kwargs, 'items'):
-            args = ', '.join([f'{k}={c(v)}' for k, v in self.kwargs.items()])
+            args = ', '.join([f'{k}={_cv(v)}' for k, v in self.kwargs.items()])
         else:
             args = ''
         return f'{self.callback}({args})'
