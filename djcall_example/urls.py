@@ -1,12 +1,17 @@
+from django.contrib import admin
+
 from crudlfap import shortcuts as crudlfap
 
 from django.conf import settings
-from django.conf.urls import include, url
+from django.urls import include, path
 
-urlpatterns = [crudlfap.site.urlpattern]
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    crudlfap.site.urlpattern,
+]
 
 if 'debug_toolbar' in settings.INSTALLED_APPS and settings.DEBUG:
     import debug_toolbar
     urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        path('__debug__/', include(debug_toolbar.urls)),
     ]
