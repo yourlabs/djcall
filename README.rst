@@ -1,7 +1,21 @@
+Requirements
+============
+
+Upgrade from v0.3 to v0.4
+=========================
+
+As of v0.4, djcall uses a PostgreSQL JSON field instead of a Picklefield for
+Caller.kwargs, which means that unless you have only JSON serializable contents
+in your djcall_caller.kwargs columns: the migration will fail, so will it if
+you don't run PostgreSQL. Sorry, but it became too much of an annoyance not to
+be able to query of Call kwargs. Anyway, a migration should take care of this
+for you. It leaves the old Picklefield renamed from kwargs to old_kwargs until
+next release where it will be dropped.
+
 Install
 =======
 
-pip install django-call
+pip install djcall
 
 Add djcall to INSTALLED_APPS and migrate.
 
