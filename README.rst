@@ -19,6 +19,27 @@ pip install djcall
 
 Add djcall to INSTALLED_APPS and migrate.
 
+Usage
+=====
+
+.. code-block:: python
+
+    from djcall.models import Caller
+
+    Caller(
+        # path to python callback
+        callback='djblockchain.tezos.transaction_watch',
+        # JSON serializable kwargs
+        kwargs=dict(
+            pk=transaction.pk,
+        ),
+    ).spool('blockchain')  # optionnal spooler name
+
+No decorator, no nothing,
+
+If you have CRUDLFA+ or django.contrib.admin, you should see the jobs there,
+and be able to cancel them.
+
 Example project
 ===============
 
@@ -34,7 +55,7 @@ Run with runserver::
 
 Or with uWSGI::
 
-    uwsgi --env DJANGO_SETTINGS_MODULE=djcall_example.settings --env DEBUG=1 --spooler=/spooler/stat --spooler=/spooler/mail --spooler-processes 1 --http=:8000 --plugin=python --module=djcall_example.wsgi:application --honour-stdin --static-map /static=static
+    uwsgi --env DJANGO_SETTINGS_MODULE=djcall_example.settings --env DEBUG=1 --spooler=/spooler/blockchain --spooler=/spooler/mail --spooler-processes 1 --http=:8000 --plugin=python --module=djcall_example.wsgi:application --honour-stdin --static-map /static=static
 
 History
 =======
