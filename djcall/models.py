@@ -1,7 +1,8 @@
 import itertools
 import logging
-import traceback
+import os
 import sys
+import traceback
 
 from django.contrib.postgres.fields import JSONField
 from django.db import close_old_connections
@@ -203,12 +204,18 @@ class Caller(Metadata):
     def python_callback(self):
         parts = self.callback.split('.')
         i = self.callback.count('.')
+        errs = []
         while i:
             try:
-                mod = import_string('.'.join(parts[:i + 1]))
-            except ImportError:
+                modname = '.'.join(parts[:i + 1])
+                mod = import_string(modname)
+            except ImportError as err:
+                errs.append('{}: {}'.format(modname, err))
                 i -= 1
                 if not i:
+                    logger.warning(
+                        'could not resolve python_callback!'
+                        " errors: {}, cwd: {}".format(errs, os.getcwd()))
                     raise
             else:
                 ret = mod
