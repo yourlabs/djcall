@@ -21,6 +21,11 @@ class CallerAdmin(admin.ModelAdmin):
         'spooler',
     ] + MetadataModelAdmin.list_display
 
+    search_fields = [
+        'pk',
+        'kwargs',
+    ]
+
     list_filter = [
         'status',
         'spooler',
@@ -43,6 +48,8 @@ class CallAdmin(admin.ModelAdmin):
 
     search_fields = [
         'caller__callback',
+        'caller__kwargs',
+        'caller__pk',
     ]
 
 
