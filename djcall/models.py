@@ -3,6 +3,7 @@ import logging
 import traceback
 import sys
 
+from django.contrib.postgres.fields import JSONField
 from django.db import close_old_connections
 from django.db import models
 from django.db import transaction
@@ -177,7 +178,8 @@ class Caller(Metadata):
         default=0,
         editable=False,
     )
-    kwargs = PickledObjectField(null=True)
+    old_kwargs = PickledObjectField(null=True)
+    kwargs = JSONField(null=True)
     callback = models.CharField(
         max_length=255,
         db_index=True,

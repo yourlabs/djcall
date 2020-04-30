@@ -7,6 +7,14 @@ py-test:
   script:
     - pip install -e .[django,example]
     - DEBUG=1 pytest --cov djcall --cov-report term-missing -vv --strict -r fEsxXw
+  variables:
+    POSTGRES_DB: djcall
+    POSTGRES_USER: djcall
+    POSTGRES_PASSWORD: djcall
+    POSTGRES_HOST_AUTH_METHOD: trust
+    POSTGRES_HOST: postgres
+  services:
+    - name: postgres:latest
 
 pypi:
   stage: deploy

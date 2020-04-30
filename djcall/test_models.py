@@ -6,7 +6,7 @@ from djcall.models import Call, Caller, Cron, spooler
 def mockito(**kwargs):
     exception = kwargs.get('exception')
     if exception:
-        raise exception
+        raise Exception(exception)
     subcalls = kwargs.get('subcalls')
     if subcalls:
         for subcall in subcalls:
@@ -32,7 +32,7 @@ def test_call_execute_result():
 def test_call_execute_exception():
     caller = Caller(
         callback='djcall.test_models.mockito',
-        kwargs=dict(exception=Exception('lol')),
+        kwargs=dict(exception='lol'),
     )
     with pytest.raises(Exception):
         caller.call()
@@ -41,7 +41,7 @@ def test_call_execute_exception():
     assert call.caller.status == call.STATUS_RETRYING
     assert call.result is None
     assert call.exception.startswith('Traceback')
-    assert 'raise exception' in call.exception
+    assert 'raise Exception' in call.exception
 
 
 @pytest.mark.django_db(transaction=True)
@@ -49,7 +49,7 @@ def test_spool():
     # tests spool() call works outside uwsgi (we're in py.test)
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
-        kwargs=dict(exception=Exception('lol')),
+        kwargs=dict(exception='lol'),
     )
 
     with pytest.raises(Exception):
@@ -61,7 +61,7 @@ def test_uwsgi_spooler_retry_and_fail():
     # test uwsgi spooler
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
-        kwargs=dict(exception=Exception('lol')),
+        kwargs=dict(exception='lol'),
         max_attempts=2,
     )
 
@@ -93,7 +93,7 @@ def test_uwsgi_spooler_delete():
     # test uwsgi spooler
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
-        kwargs=dict(exception=Exception('lol')),
+        kwargs=dict(exception='lol'),
     )
 
     call = caller.call_set.create()
@@ -109,7 +109,7 @@ def test_uwsgi_spooler_cancel():
     # test uwsgi spooler
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
-        kwargs=dict(exception=Exception('lol')),
+        kwargs=dict(exception='lol'),
     )
 
     call = caller.call_set.create()
