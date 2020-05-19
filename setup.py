@@ -13,6 +13,7 @@ setup(
     keywords='django uwsgi cache spooler',
     install_requires=[
         'django-picklefield',
+        'psycopg2',
     ],
     extras_require=dict(
         django=[
