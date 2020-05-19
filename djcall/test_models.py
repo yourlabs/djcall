@@ -19,13 +19,15 @@ def mockito(**kwargs):
 
 @pytest.mark.django_db(transaction=True)
 def test_call_execute_result():
-    call = Caller(
+    caller = Caller(
         callback='djcall.test_models.mockito',
         kwargs=dict(id=1),
-    ).call()
+    )
+    call = caller.call()
     assert call.result == 1
     assert call.status == call.STATUS_SUCCESS
     assert call.caller.status == call.STATUS_SUCCESS
+    assert not caller.running
 
 
 @pytest.mark.django_db(transaction=True)
