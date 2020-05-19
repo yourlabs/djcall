@@ -46,14 +46,15 @@ def test_call_execute_exception():
 
 @pytest.mark.django_db(transaction=True)
 def test_spool():
-    # tests spool() call works outside uwsgi (we're in py.test)
+    """Check spool() call works outside of uwsgi (we're in pytest)."""
     caller = Caller.objects.create(
         callback='djcall.test_models.mockito',
         kwargs=dict(exception='lol'),
     )
-
-    with pytest.raises(Exception):
-        caller.spool()
+    assert caller.spool() is caller
+    call = Call.objects.get()
+    assert call.status == Call.STATUS_UNSPOOLABLE
+    assert "lol" in call.exception
 
 
 @pytest.mark.django_db(transaction=True)
