@@ -228,6 +228,14 @@ class Caller(Metadata):
         call.call()
         return call
 
+    @property
+    def running(self):
+        return self.status in (
+            Metadata.STATUS_SPOOLED,
+            Metadata.STATUS_STARTED,
+            Metadata.STATUS_RETRYING,
+        )
+
     def spool(self, spooler=None):
         logger.debug(f'{self}.spool()')
         if spooler:
