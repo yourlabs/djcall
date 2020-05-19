@@ -6,8 +6,6 @@ class MockedUwsgi:
     SPOOL_OK = -2
     SPOOL_RETRY = -1
 
-    spoolers = []
-
     def spool(self, arg: Dict[bytes, str]) -> None:
         """Simulate uwsgi.spool by calling the spooler directly.
 
