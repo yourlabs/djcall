@@ -12,9 +12,13 @@ from django.db.models import signals
 from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
+
 from picklefield.fields import PickledObjectField
 
-from . import uwsgi
+try:
+    import uwsgi
+except ImportError:
+    uwsgi = None
 
 
 logger = logging.getLogger('djcall')
@@ -42,6 +46,7 @@ def spooler(env):
 
     call = Call.objects.filter(pk=pk).select_related('caller').first()
 
+    success = getattr(uwsgi, 'SPOOL_OK', True)
     if call:
         if call.caller.status == call.caller.STATUS_CANCELED:
             logger.info(
@@ -51,7 +56,7 @@ def spooler(env):
             call.status = call.STATUS_CANCELED
             call.save()
             close_old_connections()  # cleanup
-            return uwsgi.SPOOL_OK
+            return success
 
         try:
             call.call()
@@ -60,7 +65,7 @@ def spooler(env):
             close_old_connections()  # cleanup
 
             if max_attempts and call.caller.call_set.count() >= max_attempts:
-                return uwsgi.SPOOL_OK
+                return success
             raise  # will trigger retry from uwsgi
     else:
         logger.exception(
@@ -68,10 +73,11 @@ def spooler(env):
 
     logger.debug(f'spooler(_cv({args})): closing on success')
     close_old_connections()  # cleanup
-    return uwsgi.SPOOL_OK
+    return success
 
 
-uwsgi.spooler = spooler
+if uwsgi:
+    uwsgi.spooler = spooler
 
 
 def get_spooler_path(name):
@@ -243,27 +249,30 @@ class Caller(Metadata):
         self.save_status('spooled')
         call = Call.objects.create(caller=self)
 
-        arg = {b'call': str(call.pk).encode('ascii')}
-        if self.spooler:
-            arg[b'spooler'] = get_spooler_path(self.spooler)
-        if self.priority:
-            arg[b'priority'] = self.priority
+        if uwsgi:
+            arg = {b'call': str(call.pk).encode('ascii')}
+            if self.spooler:
+                arg[b'spooler'] = get_spooler_path(self.spooler)
+            if self.priority:
+                arg[b'priority'] = self.priority
 
-        def spool():
-            logger.debug(f'uwsgi.spool({arg})')
-            try:
-                uwsgi.spool(arg)
-            except Exception:
-                tt, value, tb = sys.exc_info()
-                call.exception = '\n'.join(
-                    traceback.format_exception(tt, value, tb))
-                call.save_status('unspoolable')
-                logger.exception(
-                    f'{self} -> Call(id={call.pk}).spool():'
-                    f' uwsgi.spool exception !'
-                )
-                # uwsgi does not seem to reprint logger.exception
-        transaction.on_commit(spool)
+            def spool():
+                logger.debug(f'uwsgi.spool({arg})')
+                try:
+                    uwsgi.spool(arg)
+                except Exception:
+                    tt, value, tb = sys.exc_info()
+                    call.exception = '\n'.join(
+                        traceback.format_exception(tt, value, tb))
+                    call.save_status('unspoolable')
+                    logger.exception(
+                        f'{self} -> Call(id={call.pk}).spool():'
+                        f' uwsgi.spool exception !'
+                    )
+                    # uwsgi does not seem to reprint logger.exception
+            transaction.on_commit(spool)
+        else:
+            call.call()
 
         logger.debug(f'{self}.spool(): success')
         return self
