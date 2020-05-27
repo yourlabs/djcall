@@ -449,3 +449,17 @@ class Cron(models.Model):
                 f'{self.caller} add cron : {args} '
                 f'signal {self.caller.signal_number}')
             uwsgi.add_cron(self.caller.signal_number, *args)
+
+
+def setup():
+    caller = Caller.objects.filter(callback='djcall.models.prune').first()
+    if not caller:
+        caller = Caller.objects.create(
+            callback='djcall.models.prune',
+            kwargs=dict(keep=10000),
+        )
+
+    cron = Cron.objects.filter(caller=caller).first()
+    if not cron:
+        cron = Cron.objects.create(caller=caller, hour=4, minute=0)
+    Cron.objects.add_crons()
