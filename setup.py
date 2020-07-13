@@ -14,6 +14,7 @@ setup(
     install_requires=[
         'django-picklefield',
         'psycopg2',
+        'jsonlight',
     ],
     extras_require=dict(
         django=[
