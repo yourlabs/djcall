@@ -2,12 +2,13 @@
 
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations
+import jsonlight
 
 
 def convert_kwargs(apps, schema_editor):
     Caller = apps.get_model('djcall', 'Caller')
     for caller in Caller.objects.all():
-        caller.kwargs = caller.old_kwargs
+        caller.kwargs = jsonlight.dumps(caller.old_kwargs)
         caller.save()
 
 
